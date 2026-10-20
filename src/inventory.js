@@ -1,8 +1,9 @@
 // Vehicle records are transcribed from the listing sheets supplied in public/cars.
-// Replace this local catalogue with the ERP adapter when its inventory API is ready.
-export const BRANCHES = ['شعبه نگین ظفر', 'شعبه اداره تحویل', 'شعبه شریعتی', 'شعبه ظفر'];
+// When the site reaches the ERP, src/erp.js replaces these three with the ERP's cars (replaceInventory);
+// this local catalogue is what the site shows without it.
+export let BRANCHES = ['شعبه نگین ظفر', 'شعبه اداره تحویل', 'شعبه شریعتی', 'شعبه ظفر'];
 
-export const CATALOG_CARS = {
+export let CATALOG_CARS = {
   'benz-a200l': {
     id: 'benz-a200l', name: 'Mercedes-Benz A 200 L', nameFa: 'بنز کلاس A سدان', brand: 'مرسدس‌بنز', bodyFa: 'سدان',
     specs: [],
@@ -37,7 +38,7 @@ export const CATALOG_CARS = {
   },
 };
 
-export const inventory = [
+export let inventory = [
   {
     id: 'benz-a200l-01', carId: 'benz-a200l', trim: 'A200L', color: 'سفید', branch: BRANCHES[0], status: 'آماده بازدید',
     price: 16_500_000_000, year: 1405, yearLabel: '۱۴۰۵ شمسی', mileage: 0,
@@ -76,10 +77,10 @@ export const inventory = [
       date: '۲۶ مهر ۱۴۰۵',
       summary: { healthy: 0, withIssue: 2, panelsWithHistory: 4 },
       panels: [
-        { number: 1, name: 'کاپوت', status: 'تعویض', kind: 'replaced', position: [50, 22] },
-        { number: 2, name: 'گلگیر جلو چپ', status: 'تعویض', kind: 'replaced', position: [29, 32] },
-        { number: 3, name: 'گلگیر عقب چپ', status: 'رنگ‌شده', kind: 'painted', position: [27, 130] },
-        { number: 4, name: 'گلگیر جلو راست', status: 'تعویض', kind: 'replaced', position: [71, 32] },
+        { number: 1, name: 'کاپوت', key: 'hood', status: 'تعویض', kind: 'replaced', position: [50, 22] },
+        { number: 2, name: 'گلگیر جلو چپ', key: 'front_left_fender', status: 'تعویض', kind: 'replaced', position: [29, 32] },
+        { number: 3, name: 'گلگیر عقب چپ', key: 'rear_left_fender', status: 'رنگ‌شده', kind: 'painted', position: [27, 130] },
+        { number: 4, name: 'گلگیر جلو راست', key: 'front_right_fender', status: 'تعویض', kind: 'replaced', position: [71, 32] },
       ],
       structureNotes: ['شاسی جلو دو طرف جوش و ضربه دارد', 'سینی جلو دو طرف جوش و ضربه دارد'],
     },
@@ -90,3 +91,10 @@ export const inventory = [
     photos: ['/cars/vw-idunix-01/front.jpg', '/cars/vw-idunix-01/back.jpg'],
   },
 ];
+
+// The ERP's cars in place of the local catalogue: { branches, models, cars } (see src/erp.js)
+export function replaceInventory(data) {
+  BRANCHES = data.branches;
+  CATALOG_CARS = data.models;
+  inventory = data.cars;
+}
