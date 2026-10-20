@@ -76,3 +76,34 @@ export async function sendInquiry({ fullName, mobile, kind = 'Call Me Back', veh
   if (!response.ok) throw new Error(errorText(data));
   return data.message;
 }
+
+// Where the ERP's panel is for people's browsers: ERP_PUBLIC_URL of the site's server
+// (/erp-config.json, deploy/nginx.conf.template), or this address on the ERP's port 8080
+let panelUrl = null;
+export async function erpPanelUrl() {
+  if (panelUrl) return panelUrl;
+  let configured = import.meta.env.VITE_ERP_PUBLIC_URL || '';
+  if (!configured) {
+    try {
+      const response = await fetch('/erp-config.json', { headers: { Accept: 'application/json' } });
+      if (response.ok) configured = (await response.json()).erpUrl || '';
+    } catch {
+      // no config: the default below
+    }
+  }
+  panelUrl = (configured || `${window.location.protocol}//${window.location.hostname}:8080`).replace(/\/+$/, '');
+  return panelUrl;
+}
+
+// Log in to the ERP with a username (or email) and password. The site's server passes /api on to
+// the ERP, so the login is kept for this host and the panel opens already logged in when it is on
+// the same host (another port); elsewhere the panel asks once more. Returns the page to open.
+export async function erpLogin(username, password) {
+  const body = new URLSearchParams({ usr: username.trim(), pwd: password });
+  const response = await fetch(`${BASE}/api/method/login`, { method: 'POST', body, headers: { Accept: 'application/json' }, credentials: 'include' });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(response.status === 401 ? 'نام کاربری یا رمز عبور درست نیست.' : errorText(data));
+  const base = await erpPanelUrl();
+  const home = (data.home_page || 'app').replace(/^\/+/, '');
+  return `${base}/${home}`;
+}

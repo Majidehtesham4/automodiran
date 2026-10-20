@@ -11,6 +11,13 @@ server {
 		proxy_set_header X-Forwarded-Proto $scheme;
 	}
 
+	# Where the ERP's panel is for the visitors' browsers (empty: this host on port 8080)
+	location = /erp-config.json {
+		default_type application/json;
+		add_header Cache-Control "no-store";
+		return 200 '{"erpUrl":"${ERP_PUBLIC_URL}"}';
+	}
+
 	# Every page of the site is index.html (the site picks the page from the address)
 	location / {
 		try_files $uri /index.html;

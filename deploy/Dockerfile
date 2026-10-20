@@ -6,6 +6,7 @@
 #
 # ERP: where the ERP answers. ERP_HOST: which of its business environments has the showroom
 # (localhost for its main site, or e.g. automodiran.localhost when it is a business of its own).
+# ERP_PUBLIC_URL: the panel's address for visitors (the «ورود» page); empty: this host, port 8080.
 FROM node:22-alpine AS build
 WORKDIR /site
 COPY package.json package-lock.json ./
@@ -14,6 +15,6 @@ COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine
-ENV ERP=http://host.docker.internal:8080 ERP_HOST=localhost
+ENV ERP=http://host.docker.internal:8080 ERP_HOST=localhost ERP_PUBLIC_URL=""
 COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /site/dist /usr/share/nginx/html

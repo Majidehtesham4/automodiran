@@ -2,7 +2,7 @@ import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BadgeCheck, Banknote, Building2, Calculator as CalculatorIcon, Camera, Clock3, Globe, Lightbulb, LogIn, MapPin, Maximize2, Menu, Moon, Pause, Phone, Play, Plus, RotateCcw, Search, Share2, SlidersHorizontal, Sparkles, Sun, X } from 'lucide-react';
 import { cars, SITE, SPECS_NOTE } from './cars.js';
 import { BRANCHES, CATALOG_CARS, inventory } from './inventory.js';
-import { erp, loadInventory, sendInquiry } from './erp.js';
+import { erp, erpLogin, erpPanelUrl, loadInventory, sendInquiry } from './erp.js';
 import { Logo } from './Logo.jsx';
 
 const Viewer = lazy(() => import('./Viewer.jsx'));
@@ -428,9 +428,22 @@ function CarDetail({ stock, navigate }) {
 }
 
 function LoginPage() {
-  const [mode, setMode] = useState('mobile');
-  const [submitted, setSubmitted] = useState(false);
-  return <main className="section login-page" dir="rtl"><section className="login-card"><div className="login-brand"><Logo variant="login" /></div><span className="eyebrow">حساب کاربری</span><h1>ورود به حساب</h1><p>{mode === 'mobile' ? 'شماره موبایلتان را وارد کنید تا کد ورود برایتان پیامک شود.' : 'نام کاربری و رمز عبور خود را وارد کنید.'}</p><div className="login-tabs"><button className={mode === 'mobile' ? 'active' : ''} onClick={() => { setMode('mobile'); setSubmitted(false); }}>ورود با موبایل</button><button className={mode === 'password' ? 'active' : ''} onClick={() => { setMode('password'); setSubmitted(false); }}>نام کاربری و رمز</button></div><form onSubmit={(event) => { event.preventDefault(); setSubmitted(true); }}><label>{mode === 'mobile' ? 'شماره موبایل' : 'نام کاربری'}<input autoFocus inputMode={mode === 'mobile' ? 'tel' : 'text'} placeholder={mode === 'mobile' ? '09xxxxxxxxx' : 'نام کاربری'} /></label>{mode === 'password' && <label>رمز عبور<input type="password" placeholder="رمز عبور" /></label>}<button className="login-submit" type="submit">{mode === 'mobile' ? 'دریافت کد' : 'ورود'}</button></form>{submitted && <p className="login-feedback">این فرم نمایشی است و برای ورود واقعی به سرویس احراز هویت نیاز دارد.</p>}<small>ثبت آگهی و ورود کاربران از همین صفحه انجام می‌شود.</small></section></main>;
+  // Staff, investors and customers log in to the showroom's panel (the ERP) from here
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [state, setState] = useState({ status: 'idle', text: '' });
+  const [panel, setPanel] = useState('');
+  useEffect(() => { erpPanelUrl().then(setPanel); }, []);
+  const submit = async (event) => {
+    event.preventDefault();
+    setState({ status: 'sending', text: '' });
+    try {
+      window.location.assign(await erpLogin(username, password));
+    } catch (error) {
+      setState({ status: 'error', text: error.message });
+    }
+  };
+  return <main className="section login-page" dir="rtl"><section className="login-card"><div className="login-brand"><Logo variant="login" /></div><span className="eyebrow">پنل نمایشگاه</span><h1>ورود به پنل</h1><p>کارکنان، سرمایه‌گذاران و مشتریان با نام کاربری و رمز عبوری که نمایشگاه به آن‌ها داده وارد می‌شوند.</p><form onSubmit={submit}><label>نام کاربری یا ایمیل<input autoFocus required autoComplete="username" dir="ltr" value={username} onChange={(event) => setUsername(event.target.value)} /></label><label>رمز عبور<input type="password" required autoComplete="current-password" dir="ltr" value={password} onChange={(event) => setPassword(event.target.value)} /></label><button className="login-submit" type="submit" disabled={state.status === 'sending'}>{state.status === 'sending' ? 'در حال ورود…' : 'ورود'}</button></form>{state.status === 'error' && <p className="login-feedback" role="alert">{state.text}</p>}{panel && <small><a href={`${panel}/login`} dir="ltr">{panel.replace(/^https?:\/\//, '')}</a> — ورود مستقیم به پنل</small>}</section></main>;
 }
 
 function SellPage({ navigate }) {
